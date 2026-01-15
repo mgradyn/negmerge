@@ -48,23 +48,21 @@ class PytorchStanfordCars(VisionDataset):
 
         self._split = verify_str_arg(split, "split", ("train", "test"))
         
-        if download:
-            self.download()
+        # Load dataset from Hugging Face - don't materialize all samples in memory
+        self._dataset = load_dataset("tanganke/stanford_cars", split=self._split, cache_dir=root)
         
-        # Load dataset from Hugging Face
-        dataset = load_dataset("tanganke/stanford_cars", split=self._split, cache_dir=root)
-        
-        # Extract samples and classes
-        self._samples = [(item['image'], item['label']) for item in dataset]
-        self.classes = dataset.features['label'].names
+        # Extract class information
+        self.classes = self._dataset.features['label'].names
         self.class_to_idx = {cls: i for i, cls in enumerate(self.classes)}
 
     def __len__(self) -> int:
-        return len(self._samples)
+        return len(self._dataset)
 
     def __getitem__(self, idx: int) -> Tuple[Any, Any]:
         """Returns pil_image and class_id for given index"""
-        pil_image, target = self._samples[idx]
+        item = self._dataset[idx]
+        pil_image = item['image']
+        target = item['label']
         
         # Convert to PIL Image if necessary
         if not isinstance(pil_image, Image.Image):
