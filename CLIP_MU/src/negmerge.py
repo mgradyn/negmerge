@@ -65,7 +65,7 @@ for dataset in merge_datasets:
             merged_vector[key] += task_vector.vector[key]
             mask[key] += torch.sign(task_vector.vector[key])
 
-    for key in torch.load(checkpoint_path).state_dict().keys():
+    for key in torch.load(checkpoint_path, weights_only=False).state_dict().keys():
         consistency_mask = torch.abs(mask[key]) == len(checkpoint_paths)
         task_vector.vector[key] = torch.where(consistency_mask, merged_vector[key] / len(checkpoint_paths),
                                               torch.zeros_like(merged_vector[key]))
